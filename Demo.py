@@ -34,11 +34,9 @@ def calculate_mmc_metrics(lmbda, mu, s, scenario_name):
     p0 = 1 / (sum_term1 + term2)
     
     # Calculate Pw (Probability an arriving customer must wait - P_queue)
-    # The M/M/c formula for Pw is: P0 * (lambda/mu)^s / (s! * (1 - rho))
     pw = (lmbda / mu)**s / (factorial(s) * (1 - rho)) * p0
     
     # Calculate Wq (Average time spent in the queue)
-    # The M/M/c formula for Wq is: Pw / (s * mu - lambda)
     wq = pw / (s * mu - lmbda)
     
     # Calculate Throughput (lambda in steady state)
@@ -56,10 +54,16 @@ def calculate_mmc_metrics(lmbda, mu, s, scenario_name):
 
 # --- 2. Data Loading and Real Rate Calculation ---
 
-file_name = "dataset.csv"
+# *** This is the corrected file name based on your last input ***
+file_name = "dataset.csv" 
 
 # Load data and calculate real rates
-df = pd.read_csv(file_name)
+try:
+    df = pd.read_csv(file_name)
+except FileNotFoundError:
+    print(f"Error: The file '{file_name}' was not found. Please ensure it is in the same directory.")
+    exit()
+
 df['ArrivalTime'] = pd.to_datetime(df['ArrivalTime'])
 
 # Calculate Mu (Service Rate)
@@ -75,8 +79,8 @@ LMBDA_REAL = 1.0 / mean_inter_arrival_time_min
 # --- 3. Scenario Configuration (Rates) ---
 
 # Stress Test / Peak Load Rates (Used for Figure 4 Analysis)
-LMBDA_PEAK = 1.0 / 2.0  # Assumes an average inter-arrival time of 2.0 min at peak
-MU_PEAK = 1.0 / 5.0    # Assumes an average service time of 5.0 min at peak
+LMBDA_PEAK = 1.0 / 2.0  # Assumes 0.5 customers/min at peak
+MU_PEAK = 1.0 / 5.0    # Assumes 0.2 customers/min service rate
 
 # Faster Service Rate for Peak Load (15% faster service time)
 MU_PEAK_FASTER = 1.0 / (5.0 * 0.85)
@@ -108,7 +112,7 @@ base_wait_peak = results_peak1['Avg_Wait_Min']
 df_peak['Avg_Wait_Min_Change'] = (df_peak['Avg_Wait_Min'] - base_wait_peak) / base_wait_peak * 100
 
 
-# --- 6. Manual Table Printing (Fixing the 'tabulate' error) ---
+# --- 6. Manual Table Printing (Guarantees no 'tabulate' error) ---
 
 print("\n" + "="*80)
 print("SYSTEM RATES BASED ON REAL DATA")
@@ -145,4 +149,6 @@ def print_table(df, title):
 print_table(df_real, "TABLE 1: SYSTEM PERFORMANCE UNDER NORMAL (OBSERVED) LOAD (Section 6 Validation)")
 
 # Print Table 2 (Figure 4 Data)
+print_table(df_peak, "TABLE 2: SYSTEM PERFORMANCE UNDER PEAK LOAD (STRESS TEST - FIGURE 4 DATA)")
+
 print_table(df_peak, "TABLE 2: SYSTEM PERFORMANCE UNDER PEAK LOAD (STRESS TEST - FIGURE 4 DATA)")
